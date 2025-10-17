@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 تریدر حرفه‌ای</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            color: #ffd166;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .status {
+            background: #06d6a0;
+            color: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .features {
+            text-align: right;
+            margin: 30px 0;
+        }
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            border-right: 4px solid #ffd166;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 تریدر حرفه‌ای ارزدیجیتال</h1>
+        <div class="status">
+            ✅ سیستم با موفقیت راه‌اندازی شد
+        </div>
+        
+        <div class="features">
+            <h3>🎯 قابلیت‌های سیستم:</h3>
+            <div class="feature-item">🔍 اسکنر ۲۰۰ کوین برتر بازار</div>
+            <div class="feature-item">💥 شناسایی شت‌کوین‌های انفجاری</div>
+            <div class="feature-item">📊 نمودارهای پیشرفته TradingView</div>
+            <div class="feature-item">🐋 تحلیل رفتار نهنگ‌ها و اخبار</div>
+            <div class="feature-item">🤖 تریدر تمام اتوماتیک پیشرفته</div>
+        </div>
+
+        <div id="websocket-status" style="margin-top: 30px;">
+            🔄 در حال اتصال به داده‌های زنده...
+        </div>
+    </div>
+
+    <script>
+        // اتصال به WebSocket برای داده‌های زنده
+        const ws = new WebSocket(`wss://${window.location.host}/ws`);
+        
+        ws.onopen = function() {
+            document.getElementById('websocket-status').innerHTML = 
+                '✅ متصل به داده‌های زنده بازار';
+        };
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('Data received:', data);
+        };
+        
+        ws.onerror = function(error) {
+            document.getElementById('websocket-status').innerHTML = 
+                '❌ خطا در اتصال به داده‌های زنده';
+        };
+    </script>
+</body>
+</html>
