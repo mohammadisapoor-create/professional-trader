@@ -1,29 +1,29 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import uvicorn
+from fastapi import FastAPI, WebSocket
+from fastapi.responses import HTMLResponse
+from datetime import datetime
 import asyncio
 import json
-from datetime import datetime
+from modules.scanner import MarketScanner
 
 app = FastAPI(
     title="🚀 تریدر حرفه‌ای ارزدیجیتال",
     description="سیستم کامل ترید خودکار با قابلیت‌های پیشرفته",
-    version="1.0.0"
+    version="2.0.0"
 )
 
-# مسیر اصلی - رابط کاربری
+# نمونه اسکنر
+scanner = MarketScanner()
+
 @app.get("/")
-async def read_root():
+async def root():
     return {"message": "خوش آمدید به تریدر حرفه‌ای", "status": "active"}
 
-# وضعیت سیستم
 @app.get("/status")
-async def get_status():
+async def status():
     return {
         "status": "فعال",
         "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0",
+        "version": "2.0.0",
         "features": [
             "اسکنر ۲۰۰ کوین برتر",
             "شناسایی شت‌کوین‌های انفجاری", 
@@ -33,6 +33,29 @@ async def get_status():
         ]
     }
 
+# API جدید: اسکنر بازار
+@app.get("/api/market/top-coins")
+async def get_top_coins():
+    """دریافت 200 ارز برتر بازار"""
+    coins = await scanner.get_top_200_coins()
+    return {
+        "count": len(coins),
+        "timestamp": datetime.now().isoformat(),
+        "coins": coins[:50]  # نمایش 50 ارز اول برای تست
+    }
+
+# API جدید: شت‌کوین‌های انفجاری
+@app.get("/api/market/explosive-coins")
+async def get_explosive_coins():
+    """دریافت شت‌کوین‌های انفجاری"""
+    coins = await scanner.get_top_200_coins()
+    explosive = scanner.detect_explosive_coins(coins)
+    return {
+        "count": len(explosive),
+        "timestamp": datetime.now().isoformat(),
+        "explosive_coins": explosive
+    }
+
 # WebSocket برای داده‌های زنده
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -40,16 +63,21 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             # ارسال داده‌های زنده بازار
+            coins = await scanner.get_top_200_coins()
+            explosive = scanner.detect_explosive_coins(coins)
+            
             market_data = {
                 "type": "market_update",
                 "timestamp": datetime.now().isoformat(),
-                "message": "سیستم در حال راه‌اندازی...",
-                "progress": "75%"
+                "total_coins": len(coins),
+                "explosive_coins_count": len(explosive),
+                "top_gainer": max(coins, key=lambda x: x['change_24h']) if coins else None
             }
             await websocket.send_json(market_data)
-            await asyncio.sleep(5)
-    except WebSocketDisconnect:
-        print("Client disconnected")
+            await asyncio.sleep(10)  # هر 10 ثانیه آپدیت
+    except Exception as e:
+        print(f"WebSocket error: {e}")
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
