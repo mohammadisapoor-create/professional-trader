@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 import asyncio
 import json
@@ -14,15 +15,24 @@ app = FastAPI(
     version="3.0.0"
 )
 
+# سرویس فایل‌های استاتیک
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # نمونه‌های ماژول‌ها
 scanner = MarketScanner()
 charts = AdvancedCharts()
 whale_tracker = WhaleTracker()
 auto_trader = AutoTrader()
 
-@app.get("/")
-async def root():
-    return {"message": "خوش آمدید به تریدر حرفه‌ای - نسخه کامل", "status": "active"}
+# مسیر اصلی - نمایش دشبورد
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    try:
+        with open("templates/dashboard.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        return HTMLResponse(content=f"<h1>خطا در بارگذاری دشبورد: {str(e)}</h1>")
 
 @app.get("/status")
 async def status():
